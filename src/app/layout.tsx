@@ -2,6 +2,7 @@
 
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 
 import './globals.css';
 import 'sweetalert2/dist/sweetalert2.min.css';
@@ -107,6 +108,11 @@ export default async function RootLayout({
       <body
         className={`${inter.className} min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-200`}
       >
+        {/* Google Cast Sender SDK */}
+        <Script
+          src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"
+          strategy="beforeInteractive"
+        />
         <ThemeProvider
           attribute='class'
           defaultTheme='system'
