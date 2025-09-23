@@ -1228,6 +1228,28 @@ function PlayPageClient() {
     }
   };
 
+
+  // Initialize Cast framework before creating player
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Set up Cast framework options when SDK is available
+      (window as any).__onGCastApiAvailable = (isAvailable: boolean) => {
+        if (isAvailable && (window as any).cast && (window as any).cast.framework) {
+          try {
+            const castContext = (window as any).cast.framework.CastContext.getInstance();
+            castContext.setOptions({
+              receiverApplicationId: (window as any).chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+              autoJoinPolicy: (window as any).chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+            });
+            console.log('Cast framework initialized successfully');
+          } catch (error) {
+            console.warn('Failed to initialize Cast framework:', error);
+          }
+        }
+      };
+    }
+  }, []);
+
   useEffect(() => {
     if (
       !Artplayer ||
