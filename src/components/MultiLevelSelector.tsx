@@ -412,7 +412,7 @@ const MultiLevelSelector: React.FC<MultiLevelSelectorProps> = ({
             // 排序传递 value，其他传递 label
             if (key === 'sort') {
               selectionsForParent[key] = option.value;
-            } else if ('query' in option) {
+            } else if ('query' in option && typeof option.query === 'string') {
               selectionsForParent[key] = option.query;
             } else {
               selectionsForParent[key] = option.label;
