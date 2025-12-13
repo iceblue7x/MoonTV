@@ -11,29 +11,12 @@ export enum UpdateStatus {
   FETCH_FAILED = 'fetch_failed', // 获取失败
 }
 
-// 远程版本检查URL配置
-const VERSION_CHECK_URLS = [
-  'https://raw.githubusercontent.com/LunaTechLab/MoonTV/main/VERSION.txt',
-  'https://cdn.jsdelivr.net/gh/LunaTechLab/moontv/VERSION.txt',
-];
-
 /**
  * 检查是否有新版本可用
  * @returns Promise<UpdateStatus> - 返回版本检查状态
  */
 export async function checkForUpdates(): Promise<UpdateStatus> {
   try {
-    // 尝试从主要URL获取版本信息
-    // const primaryVersion = await fetchVersionFromUrl(VERSION_CHECK_URLS[0]);
-    // if (primaryVersion) {
-    //   return compareVersions(primaryVersion);
-    // }
-
-    // // 如果主要URL失败，尝试备用URL
-    // const backupVersion = await fetchVersionFromUrl(VERSION_CHECK_URLS[1]);
-    // if (backupVersion) {
-    //   return compareVersions(backupVersion);
-    // }
     return UpdateStatus.NO_UPDATE;
 
     // 如果两个URL都失败，返回获取失败状态
@@ -41,44 +24,6 @@ export async function checkForUpdates(): Promise<UpdateStatus> {
   } catch (error) {
     console.error('版本检查失败:', error);
     return UpdateStatus.FETCH_FAILED;
-  }
-}
-
-/**
- * 从指定URL获取版本信息
- * @param url - 版本信息URL
- * @returns Promise<string | null> - 版本字符串或null
- */
-async function fetchVersionFromUrl(url: string): Promise<string | null> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
-
-    // 添加时间戳参数以避免缓存
-    const timestamp = Date.now();
-    const urlWithTimestamp = url.includes('?')
-      ? `${url}&_t=${timestamp}`
-      : `${url}?_t=${timestamp}`;
-
-    const response = await fetch(urlWithTimestamp, {
-      method: 'GET',
-      signal: controller.signal,
-      headers: {
-        'Content-Type': 'text/plain',
-      },
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const version = await response.text();
-    return version.trim();
-  } catch (error) {
-    console.warn(`从 ${url} 获取版本信息失败:`, error);
-    return null;
   }
 }
 
