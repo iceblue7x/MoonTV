@@ -315,7 +315,7 @@ function DoubanPageClient() {
           kind: primarySelection === '番剧' ? 'tv' : 'movie',
           pageLimit: 25,
           pageStart: 0,
-          category: '動畫',
+          category: '动画',
           format: primarySelection === '番剧' ? '电视剧' : '',
           region: multiLevelValues.region
             ? (multiLevelValues.region as string)
