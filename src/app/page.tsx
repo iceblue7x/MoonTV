@@ -9,6 +9,7 @@ import { Suspense, useEffect, useState } from 'react';
 import {
   BangumiCalendarData,
   GetBangumiCalendarData,
+  getBangumiPoster,
 } from '@/lib/bangumi.client';
 // 客戶端收藏 API
 import {
@@ -376,13 +377,7 @@ function HomeClient() {
                             <VideoCard
                               from='douban'
                               title={anime.name_cn || anime.name}
-                              poster={
-                                anime.images.large ||
-                                anime.images.common ||
-                                anime.images.medium ||
-                                anime.images.small ||
-                                anime.images.grid
-                              }
+                              poster={getBangumiPoster(anime.images)}
                               douban_id={anime.id}
                               rate={anime.rating?.score?.toString() || ''}
                               year={anime.air_date?.split('-')?.[0] || ''}

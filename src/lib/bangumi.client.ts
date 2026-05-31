@@ -7,19 +7,32 @@ export interface BangumiCalendarData {
   items: {
     id: number;
     name: string;
-    name_cn: string;
+    name_cn: string | null;
     rating: {
       score: number;
-    };
-    air_date: string;
+    } | null;
+    air_date: string | null;
     images: {
       large: string;
       common: string;
       medium: string;
       small: string;
       grid: string;
-    };
+    } | null;
   }[];
+}
+
+export function getBangumiPoster(
+  images: BangumiCalendarData['items'][number]['images']
+) {
+  return (
+    images?.large ||
+    images?.common ||
+    images?.medium ||
+    images?.small ||
+    images?.grid ||
+    ''
+  );
 }
 
 export async function GetBangumiCalendarData(): Promise<BangumiCalendarData[]> {

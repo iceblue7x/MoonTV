@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@cloudflare/next-on-pages':
-        specifier: ^1.13.12
-        version: 1.13.16(next@14.2.32(@babel/core@7.28.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.38.0)
+        specifier: 1.13.12
+        version: 1.13.12(wrangler@4.38.0)
       '@dnd-kit/core':
         specifier: ^6.3.1
         version: 6.3.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -831,14 +831,13 @@ packages:
     resolution: {integrity: sha512-+tv3z+SPp+gqTIcImN9o0hqE9xyfQjI1XD9pL6NuKjua9B1y7mNYv0S9cP+QEbA4ppVgGZEmKOvHX5G5Ei1CVA==}
     engines: {node: '>=18.0.0'}
 
-  '@cloudflare/next-on-pages@1.13.16':
-    resolution: {integrity: sha512-52h51WNcfmx3szTdTd+n/xgz4qNxFtjOGG0zwnUAhTg8cjPwSUYmZp0OPRNw2jYG9xHwRS2ttSPAS8tcGkQGsw==}
+  '@cloudflare/next-on-pages@1.13.12':
+    resolution: {integrity: sha512-rPy7x9c2+0RDDdJ5o0TeRUwXJ1b7N1epnqF6qKSp5Wz1r9KHOyvaZh1ACoOC6Vu5k9su5WZOgy+8fPLIyrldMQ==}
     deprecated: 'Please use the OpenNext adapter instead: https://opennext.js.org/cloudflare'
     hasBin: true
     peerDependencies:
       '@cloudflare/workers-types': ^4.20240208.0
-      next: '>=14.3.0 && <=15.5.2'
-      vercel: '>=30.0.0 && <=47.0.4'
+      vercel: '>=30.0.0'
       wrangler: ^3.28.2 || ^4.0.0
     peerDependenciesMeta:
       '@cloudflare/workers-types':
@@ -6653,7 +6652,7 @@ snapshots:
     dependencies:
       mime: 3.0.0
 
-  '@cloudflare/next-on-pages@1.13.16(next@14.2.32(@babel/core@7.28.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(wrangler@4.38.0)':
+  '@cloudflare/next-on-pages@1.13.12(wrangler@4.38.0)':
     dependencies:
       acorn: 8.15.0
       ast-types: 0.14.2
@@ -6664,7 +6663,6 @@ snapshots:
       esbuild: 0.15.18
       js-yaml: 4.1.0
       miniflare: 3.20250718.1
-      next: 14.2.32(@babel/core@7.28.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       package-manager-manager: 0.2.0
       pcre-to-regexp: 1.1.0
       semver: 7.7.2

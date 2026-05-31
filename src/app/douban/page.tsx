@@ -6,7 +6,10 @@ import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { GetBangumiCalendarData } from '@/lib/bangumi.client';
+import {
+  GetBangumiCalendarData,
+  getBangumiPoster,
+} from '@/lib/bangumi.client';
 import {
   getDoubanCategories,
   getDoubanList,
@@ -297,12 +300,7 @@ function DoubanPageClient() {
             list: weekdayData.items.map((item) => ({
               id: item.id?.toString() || '',
               title: item.name_cn || item.name,
-              poster:
-                item.images.large ||
-                item.images.common ||
-                item.images.medium ||
-                item.images.small ||
-                item.images.grid,
+              poster: getBangumiPoster(item.images),
               rate: item.rating?.score?.toString() || '',
               year: item.air_date?.split('-')?.[0] || '',
             })),
