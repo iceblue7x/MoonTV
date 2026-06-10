@@ -41,6 +41,7 @@ export const UserMenu: React.FC = () => {
   const [defaultAggregateSearch, setDefaultAggregateSearch] = useState(true);
   const [doubanProxyUrl, setDoubanProxyUrl] = useState('');
   const [enableOptimization, setEnableOptimization] = useState(true);
+  const [enableM3u8Proxy, setEnableM3u8Proxy] = useState(false);
   const [doubanDataSource, setDoubanDataSource] = useState('direct');
   const [doubanImageProxyType, setDoubanImageProxyType] = useState('direct');
   const [doubanImageProxyUrl, setDoubanImageProxyUrl] = useState('');
@@ -155,6 +156,11 @@ export const UserMenu: React.FC = () => {
         localStorage.getItem('enableOptimization');
       if (savedEnableOptimization !== null) {
         setEnableOptimization(JSON.parse(savedEnableOptimization));
+      }
+
+      const savedEnableM3u8Proxy = localStorage.getItem('enableM3u8Proxy');
+      if (savedEnableM3u8Proxy !== null) {
+        setEnableM3u8Proxy(JSON.parse(savedEnableM3u8Proxy));
       }
     }
   }, []);
@@ -324,6 +330,18 @@ export const UserMenu: React.FC = () => {
     }
   };
 
+  const handleM3u8ProxyToggle = (value: boolean) => {
+    setEnableM3u8Proxy(value);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('enableM3u8Proxy', JSON.stringify(value));
+      window.dispatchEvent(
+        new CustomEvent('m3u8ProxyUpdated', {
+          detail: value,
+        })
+      );
+    }
+  };
+
   const handleDoubanDataSourceChange = (value: string) => {
     setDoubanDataSource(value);
     if (typeof window !== 'undefined') {
@@ -376,6 +394,7 @@ export const UserMenu: React.FC = () => {
 
     setDefaultAggregateSearch(true);
     setEnableOptimization(true);
+    setEnableM3u8Proxy(false);
     setDoubanProxyUrl(defaultDoubanProxy);
     setDoubanDataSource(defaultDoubanProxyType);
     setDoubanImageProxyType(defaultDoubanImageProxyType);
@@ -384,10 +403,16 @@ export const UserMenu: React.FC = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('defaultAggregateSearch', JSON.stringify(true));
       localStorage.setItem('enableOptimization', JSON.stringify(true));
+      localStorage.setItem('enableM3u8Proxy', JSON.stringify(false));
       localStorage.setItem('doubanProxyUrl', defaultDoubanProxy);
       localStorage.setItem('doubanDataSource', defaultDoubanProxyType);
       localStorage.setItem('doubanImageProxyType', defaultDoubanImageProxyType);
       localStorage.setItem('doubanImageProxyUrl', defaultDoubanImageProxyUrl);
+      window.dispatchEvent(
+        new CustomEvent('m3u8ProxyUpdated', {
+          detail: false,
+        })
+      );
     }
   };
 
@@ -783,6 +808,29 @@ export const UserMenu: React.FC = () => {
 
           {/* 分割線 */}
           <div className='border-t border-gray-200 dark:border-gray-700'></div>
+
+          <div className='flex items-center justify-between'>
+            <div>
+              <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
+                m3u8 代理
+              </h4>
+              <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                投放到電視時可讓播放清單經由伺服器處理
+              </p>
+            </div>
+            <label className='flex items-center cursor-pointer'>
+              <div className='relative'>
+                <input
+                  type='checkbox'
+                  className='sr-only peer'
+                  checked={enableM3u8Proxy}
+                  onChange={(e) => handleM3u8ProxyToggle(e.target.checked)}
+                />
+                <div className='w-11 h-6 bg-gray-300 rounded-full peer-checked:bg-green-500 transition-colors dark:bg-gray-600'></div>
+                <div className='absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform peer-checked:translate-x-5'></div>
+              </div>
+            </label>
+          </div>
 
           {/* 預設聚合搜索結果 */}
           <div className='flex items-center justify-between'>

@@ -22,6 +22,7 @@ import {
   saveSkipConfig,
   subscribeToDataUpdates,
 } from '@/lib/db.client';
+import { createM3u8ProxyUrl, filterAdsFromM3U8 } from '@/lib/m3u8';
 import { SearchResult } from '@/lib/types';
 import { getVideoResolutionFromM3u8, processImageUrl } from '@/lib/utils';
 
@@ -96,6 +97,51 @@ function PlayPageClient() {
   useEffect(() => {
     blockAdEnabledRef.current = blockAdEnabled;
   }, [blockAdEnabled]);
+
+  const [m3u8ProxyEnabled, setM3u8ProxyEnabled] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('enableM3u8Proxy') === 'true';
+    }
+    return false;
+  });
+  const m3u8ProxyEnabledRef = useRef(m3u8ProxyEnabled);
+  useEffect(() => {
+    m3u8ProxyEnabledRef.current = m3u8ProxyEnabled;
+  }, [m3u8ProxyEnabled]);
+
+  useEffect(() => {
+    const readM3u8ProxySetting = () =>
+      localStorage.getItem('enableM3u8Proxy') === 'true';
+    const rememberCurrentPlaybackTime = () => {
+      const currentTime = artPlayerRef.current?.currentTime || 0;
+      if (currentTime > 0) {
+        resumeTimeRef.current = currentTime;
+      }
+    };
+
+    const handleM3u8ProxyUpdated = (event: Event) => {
+      const detail = (event as CustomEvent<boolean>).detail;
+      rememberCurrentPlaybackTime();
+      setM3u8ProxyEnabled(
+        typeof detail === 'boolean' ? detail : readM3u8ProxySetting()
+      );
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'enableM3u8Proxy') {
+        rememberCurrentPlaybackTime();
+        setM3u8ProxyEnabled(readM3u8ProxySetting());
+      }
+    };
+
+    window.addEventListener('m3u8ProxyUpdated', handleM3u8ProxyUpdated);
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('m3u8ProxyUpdated', handleM3u8ProxyUpdated);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
 
   // 视频基本信息
   const [videoTitle, setVideoTitle] = useState(searchParams.get('title') || '');
@@ -411,6 +457,33 @@ function PlayPageClient() {
   };
 
   // 更新视频地址
+  const isM3u8PlaybackUrl = (url: string): boolean => {
+    if (!url) return false;
+
+    try {
+      return new URL(url).pathname.toLowerCase().endsWith('.m3u8');
+    } catch {
+      return url.split('?')[0].split('#')[0].toLowerCase().endsWith('.m3u8');
+    }
+  };
+
+  const getPlayableVideoUrl = (url: string): string => {
+    if (
+      !url ||
+      !m3u8ProxyEnabled ||
+      !isM3u8PlaybackUrl(url) ||
+      typeof window === 'undefined'
+    ) {
+      return url;
+    }
+
+    return createM3u8ProxyUrl(
+      url,
+      `${window.location.origin}/api/m3u8-proxy`,
+      blockAdEnabled
+    );
+  };
+
   const updateVideoUrl = (
     detailData: SearchResult | null,
     episodeIndex: number
@@ -423,7 +496,8 @@ function PlayPageClient() {
       setVideoUrl('');
       return;
     }
-    const newUrl = detailData?.episodes[episodeIndex] || '';
+    const originalUrl = detailData?.episodes[episodeIndex] || '';
+    const newUrl = getPlayableVideoUrl(originalUrl);
     if (newUrl !== videoUrl) {
       setVideoUrl(newUrl);
     }
@@ -438,6 +512,7 @@ function PlayPageClient() {
       sources.forEach((s) => s.remove());
       const sourceEl = document.createElement('source');
       sourceEl.src = url;
+      sourceEl.type = 'application/x-mpegURL';
       video.appendChild(sourceEl);
     }
 
@@ -495,26 +570,6 @@ function PlayPageClient() {
       }
     }
   };
-
-  // 去广告相关函数
-  function filterAdsFromM3U8(m3u8Content: string): string {
-    if (!m3u8Content) return '';
-
-    // 按行分割M3U8内容
-    const lines = m3u8Content.split('\n');
-    const filteredLines = [];
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      // 只过滤#EXT-X-DISCONTINUITY标识
-      if (!line.includes('#EXT-X-DISCONTINUITY')) {
-        filteredLines.push(line);
-      }
-    }
-
-    return filteredLines.join('\n');
-  }
 
   // 跳过片头片尾配置相关函数
   const handleSkipConfigChange = async (newConfig: {
@@ -651,7 +706,7 @@ function PlayPageClient() {
   // 当集数索引变化时自动更新视频地址
   useEffect(() => {
     updateVideoUrl(detail, currentEpisodeIndex);
-  }, [detail, currentEpisodeIndex]);
+  }, [detail, currentEpisodeIndex, m3u8ProxyEnabled, blockAdEnabled]);
 
   // 进入页面时直接获取全部源信息
   useEffect(() => {
@@ -1321,6 +1376,8 @@ function PlayPageClient() {
 
     // 非WebKit浏览器且播放器已存在，使用switch方法切换
     if (!isWebkit && artPlayerRef.current) {
+      artPlayerRef.current.option.url = videoUrl;
+      artPlayerRef.current.type = 'm3u8';
       artPlayerRef.current.switch = videoUrl;
       artPlayerRef.current.title = `${videoTitle} - 第${
         currentEpisodeIndex + 1
@@ -1351,6 +1408,7 @@ function PlayPageClient() {
       artPlayerRef.current = new Artplayer({
         container: artRef.current,
         url: videoUrl,
+        type: 'm3u8',
         poster: videoCover,
         volume: 0.7,
         isLive: false,
@@ -1379,7 +1437,9 @@ function PlayPageClient() {
         fastForward: true,
         autoOrientation: true,
         lock: true,
-        plugins: [artplayerPluginChromecast({})],
+        plugins: [
+          artplayerPluginChromecast({ mimeType: 'application/x-mpegURL' }),
+        ],
         moreVideoAttr: {
           crossOrigin: 'anonymous',
         },
@@ -1405,9 +1465,10 @@ function PlayPageClient() {
               maxBufferSize: 60 * 1000 * 1000, // 约 60MB，超出后触发清理
 
               /* 自定义loader */
-              loader: blockAdEnabledRef.current
-                ? CustomHlsJsLoader
-                : Hls.DefaultConfig.loader,
+              loader:
+                blockAdEnabledRef.current && !m3u8ProxyEnabledRef.current
+                  ? CustomHlsJsLoader
+                  : Hls.DefaultConfig.loader,
             });
 
             hls.loadSource(url);
@@ -1714,7 +1775,7 @@ function PlayPageClient() {
       console.error('创建播放器失败:', err);
       setError('播放器初始化失败');
     }
-  }, [Artplayer, Hls, videoUrl, loading, blockAdEnabled]);
+  }, [Artplayer, Hls, videoUrl, loading, blockAdEnabled, m3u8ProxyEnabled]);
 
   // 当组件卸载时清理定时器、Wake Lock 和播放器资源
   useEffect(() => {

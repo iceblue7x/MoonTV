@@ -92,6 +92,20 @@ async function fetchWithTimeout(
   }
 }
 
+async function parseDoubanResponse<T>(
+  response: Response,
+  url: string
+): Promise<T> {
+  const rawText = await response.text();
+  console.log('[Douban client raw response]', {
+    url,
+    status: response.status,
+    body: rawText,
+  });
+
+  return JSON.parse(rawText) as T;
+}
+
 function getDoubanProxyConfig(): {
   proxyType:
     | 'direct'
@@ -160,7 +174,10 @@ export async function fetchDoubanCategories(
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const doubanData: DoubanCategoryApiResponse = await response.json();
+    const doubanData = await parseDoubanResponse<DoubanCategoryApiResponse>(
+      response,
+      target
+    );
 
     // 转换数据格式
     const list: DoubanItem[] = doubanData.items.map((item) => ({
@@ -210,11 +227,10 @@ export async function getDoubanCategories(
       return fetchDoubanCategories(params, proxyUrl);
     case 'direct':
     default:
-      const response = await fetch(
-        `/api/douban/categories?kind=${kind}&category=${category}&type=${type}&limit=${pageLimit}&start=${pageStart}`
-      );
+      const requestUrl = `/api/douban/categories?kind=${kind}&category=${category}&type=${type}&limit=${pageLimit}&start=${pageStart}`;
+      const response = await fetch(requestUrl);
 
-      return response.json();
+      return parseDoubanResponse<DoubanResult>(response, requestUrl);
   }
 }
 
@@ -243,11 +259,10 @@ export async function getDoubanList(
       return fetchDoubanList(params, proxyUrl);
     case 'direct':
     default:
-      const response = await fetch(
-        `/api/douban?tag=${tag}&type=${type}&pageSize=${pageLimit}&pageStart=${pageStart}`
-      );
+      const requestUrl = `/api/douban?tag=${tag}&type=${type}&pageSize=${pageLimit}&pageStart=${pageStart}`;
+      const response = await fetch(requestUrl);
 
-      return response.json();
+      return parseDoubanResponse<DoubanResult>(response, requestUrl);
   }
 }
 
@@ -292,7 +307,10 @@ export async function fetchDoubanList(
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const doubanData: DoubanListApiResponse = await response.json();
+    const doubanData = await parseDoubanResponse<DoubanListApiResponse>(
+      response,
+      target
+    );
 
     // 转换数据格式
     const list: DoubanItem[] = doubanData.subjects.map((item) => ({
@@ -363,11 +381,10 @@ export async function getDoubanRecommends(
       return fetchDoubanRecommends(params, proxyUrl);
     case 'direct':
     default:
-      const response = await fetch(
-        `/api/douban/recommends?kind=${kind}&limit=${pageLimit}&start=${pageStart}&category=${category}&format=${format}&region=${region}&year=${year}&platform=${platform}&sort=${sort}&label=${label}`
-      );
+      const requestUrl = `/api/douban/recommends?kind=${kind}&limit=${pageLimit}&start=${pageStart}&category=${category}&format=${format}&region=${region}&year=${year}&platform=${platform}&sort=${sort}&label=${label}`;
+      const response = await fetch(requestUrl);
 
-      return response.json();
+      return parseDoubanResponse<DoubanResult>(response, requestUrl);
   }
 }
 
@@ -457,7 +474,10 @@ async function fetchDoubanRecommends(
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
-    const doubanData: DoubanRecommendApiResponse = await response.json();
+    const doubanData = await parseDoubanResponse<DoubanRecommendApiResponse>(
+      response,
+      target
+    );
     const list: DoubanItem[] = doubanData.items
       .filter((item) => item.type == 'movie' || item.type == 'tv')
       .map((item) => ({

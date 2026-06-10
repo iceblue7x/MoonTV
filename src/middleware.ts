@@ -122,6 +122,7 @@ function shouldSkipAuth(pathname: string): boolean {
     '/favicon.ico',
     '/robots.txt',
     '/manifest.json',
+    '/api/m3u8-proxy',
     '/icons/',
     '/logo.png',
     '/screenshot.png',
